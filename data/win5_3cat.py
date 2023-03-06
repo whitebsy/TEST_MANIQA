@@ -1,20 +1,18 @@
-import os
 import random
 from pathlib import Path
 import torch
 import numpy as np
-import cv2
 from PIL import Image
 from torch.utils.data import Dataset
 
-import config
+from MANIQA.config import config
 
 
-class IQA_datset(torch.utils.data.Dataset):
+class IQA_dataset(torch.utils.data.Dataset):
     def __init__(self, config, scene_list, transform, mode='train'):
-        super(IQA_datset, self).__init__()
+        super(IQA_dataset, self).__init__()
         self.config = config
-        self.scene_list = scene_list
+        self.scene_list = scene_list  #176 for win5
         self.transform = transform
         self.mode = mode
 

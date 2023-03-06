@@ -6,7 +6,6 @@ import time
 import random
 import csv
 import torchvision
-import model_net
 import sys
 from torchvision import transforms
 from torch.utils.data import DataLoader
@@ -15,12 +14,13 @@ from scipy.stats import spearmanr, pearsonr
 from tqdm import tqdm
 from data.getting_mos import dis_list3
 
+sys.path.append('~/Work/test_bsy_qmj/MANIQA')
 from model_net.bsy_maniqa import MANIQA
-from data.config import config
+from config import config
 
 '''训练部分'''
 
-if config.db_name =='win5':
+if config.db_name == 'win5':
     from data.win5_3cat import IQA_dataset
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -59,7 +59,7 @@ def train_epoch(epoch, net, criterion, optimizer, scheduler, train_loader):
     idx_epoch = []  # ++学长添加
 
     for data in tqdm(train_loader):
-        x0, x1, x2  = data['d_img_org']  #由于学长论文输入的是3张图片，因此进行了修改
+        x0, x1, x2 = data['d_img_org']  # 由于学长论文输入的是3张图片，因此进行了修改
         x_d = [x0.cuda(), x1.cuda(), x2.cuda()]
 
         labels = data['score']
@@ -84,7 +84,7 @@ def train_epoch(epoch, net, criterion, optimizer, scheduler, train_loader):
         labels_epoch = np.append(labels_epoch, labels_batch_numpy)
         idx_epoch = np.append(idx_epoch, idx_batch_numpy)  # ++
 
-    #保存分数
+    # 保存分数
     dataPath = config.svPath + '/train/train_pred_{}.csv'.format(epoch + 1)
     with open(dataPath, 'w') as f:
         writer = csv.writer(f)
@@ -96,7 +96,8 @@ def train_epoch(epoch, net, criterion, optimizer, scheduler, train_loader):
 
     ret_loss = np.mean(losses)
     logging.info('train epoch:{} / loss:{:.4} / SRCC:{:.4} / PLCC:{:.4}'.format(epoch + 1, ret_loss, rho_s, rho_p))
-    print('train epoch:{} / loss:{:.4} / SRCC:{:.4} / PLCC:{:.4}'.format(epoch + 1, ret_loss, rho_s, rho_p)) #显示每个epoch的loss srocc plcc
+    print('train epoch:{} / loss:{:.4} / SRCC:{:.4} / PLCC:{:.4}'.format(epoch + 1, ret_loss, rho_s,
+                                                                         rho_p))  # 显示每个epoch的loss srocc plcc
     return ret_loss, rho_s, rho_p
 
 
@@ -125,6 +126,7 @@ def eval_epoch(config, epoch, net, criterion, test_loader):
                 idx = data['idx'].cuda()  # ++
                 labels = torch.squeeze(labels.type(torch.FloatTensor)).cuda()
                 pred = net(x_d)
+                # pred = torch.tensor(pred)
             '''结束'''
 
             # compute loss
@@ -192,11 +194,11 @@ if __name__ == '__main__':
 
     setup_seed(20)
 
-    #config----读取文件中的配置信息
+    # config----读取文件中的配置信息
     # config file
     if not os.path.exists(config.output_path):
         os.mkdir(config.output_path)
-    #创建权重保存文件
+    # 创建权重保存文件
     if not os.path.exists(config.snap_path):
         os.mkdir(config.snap_path)
 
@@ -216,7 +218,7 @@ if __name__ == '__main__':
     train_dis, test_dis = dis_list3(config.text_path, train_rate=config.train_rate)
     # data load
     train_transform = torchvision.transforms.Compose([
-        transforms.Grayscale(num_output_channels=1),  # ++
+        transforms.Grayscale(num_output_channels=1),  # ++  RGB to Gray
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize(mean=0.5, std=0.5)
     ])
@@ -261,14 +263,14 @@ if __name__ == '__main__':
 
     '''模型加载'''
     net = MANIQA(
-        embed_dim=config.embed_dim,   #768
-        num_outputs=config.num_outputs,   #1
-        dim_mlp=config.dim_mlp,     #768
-        patch_size=config.patch_size,   #16
-        img_size=config.img_size,    #224
-        window_size=config.window_size,    #2
-        depths=config.depths,     #[2 2],是encoder的数量，为两个
-        num_heads=config.num_heads,    #[4 4]
+        embed_dim=config.embed_dim,  # 768
+        num_outputs=config.num_outputs,  # 1
+        dim_mlp=config.dim_mlp,  # 768
+        patch_size=config.patch_size,  # 16
+        img_size=config.img_size,  # 224
+        window_size=config.window_size,  # 2
+        depths=config.depths,  # [2 2],是encoder的数量，为两个
+        num_heads=config.num_heads,  # [4 4]
         num_tab=config.num_tab,
         scale=config.scale
     )
@@ -308,10 +310,9 @@ if __name__ == '__main__':
                 best_plcc = rho_p
                 # save weights
                 model_name = "epoch{}".format(epoch + 1)
-                model_save_path = os.path.join(config.snap_path, model_name)
-                torch.save(net, model_save_path)
+                # model_save_path = os.path.join(config.snap_path, model_name)
+                # torch.save(net, model_save_path)
                 logging.info(
                     'Saving weights and model of epoch{}, SRCC:{}, PLCC:{}'.format(epoch + 1, best_srocc, best_plcc))
 
         logging.info('Epoch {} done. Time: {:.2}min'.format(epoch + 1, (time.time() - start_time) / 60))
-
