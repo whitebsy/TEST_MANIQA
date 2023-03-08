@@ -38,6 +38,7 @@ class PatchMerging(nn.Module):
         self.dim = dim
         self.reduction = nn.Linear(4 * dim, 2 * dim, bias=False)
         self.norm = norm_layer(4 * dim)
+        self.dropout = nn.Dropout(0.1)
 
     def forward(self, x):
         """
@@ -61,6 +62,7 @@ class PatchMerging(nn.Module):
 
         x = self.norm(x)            # 归一化
         x = self.reduction(x)       # 降维，通道降低的两倍
+        x = self.dropout(x0)
         x = rearrange(x, 'b (h w) c -> b c h w ', h=7, w=7)
 
         return x

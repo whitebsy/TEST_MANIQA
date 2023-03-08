@@ -22,6 +22,8 @@ from config import config
 
 if config.db_name == 'win5':
     from data.win5_3cat import IQA_dataset
+if config.db_name == 'NBU':
+    from data.NBU_3cat import IQA_dataset
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
