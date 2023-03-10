@@ -38,6 +38,7 @@ class PatchMerging(nn.Module):
         self.dim = dim
         self.reduction = nn.Linear(4 * dim, 2 * dim, bias=False)
         self.norm = norm_layer(4 * dim)
+        self.dropout = nn.Dropout(0.1)
 
     def forward(self, x):
         """
@@ -61,6 +62,7 @@ class PatchMerging(nn.Module):
 
         x = self.norm(x)            # 归一化
         x = self.reduction(x)       # 降维，通道降低的两倍
+        x = self.dropout(x)
         x = rearrange(x, 'b (h w) c -> b c h w ', h=7, w=7)
 
         return x
@@ -132,23 +134,23 @@ class MANIQA(nn.Module):
         # x : [b, 3, 224 ,224]
         # 对输入进行SPT变换后再输入vit模型
         # x : [b, 3, 224, 224] ---> [b, 3*5, 224, 224]
-        # x_0 = self.spt(x[0])
-        # x_1 = self.spt(x[1])
-        # x_2 = self.spt(x[2])
-        #
-        # x_0 = self.conv(x_0)
-        # x_1 = self.conv(x_1)
-        # x_2 = self.conv(x_2)
-        #
-        # # x: [b, 15, 224, 224] --> [b, 14, 14, 15*16*16] --> [b, 196,768]
-        # x0 = self.vit(x_0).cuda()
-        # x1 = self.vit(x_1).cuda()
-        # x2 = self.vit(x_2).cuda()
+        x_0 = self.spt(x[0])
+        x_1 = self.spt(x[1])
+        x_2 = self.spt(x[2])
+
+        x_0 = self.conv(x_0)
+        x_1 = self.conv(x_1)
+        x_2 = self.conv(x_2)
+
+        # x: [b, 15, 224, 224] --> [b, 14, 14, 15*16*16] --> [b, 196,768]
+        x0 = self.vit(x_0).cuda()
+        x1 = self.vit(x_1).cuda()
+        x2 = self.vit(x_2).cuda()
 
         # 如果直接使用vit预训练模型，需要输入为[3, 224, 224]不可以更改
-        x0 = self.vit(x[0]).cuda()   # [b, 14*14, 768*5]
-        x1 = self.vit(x[1]).cuda()
-        x2 = self.vit(x[2]).cuda()
+        # x0 = self.vit(x[0]).cuda()   # [b, 14*14, 768*5]
+        # x1 = self.vit(x[1]).cuda()
+        # x2 = self.vit(x[2]).cuda()
 
         # x: [b, 196, 5*768]  -->  [b, 196, 768  * 3]
         x = torch.cat((x0, x1, x2), dim=2)

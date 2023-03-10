@@ -17,11 +17,11 @@ class Config(dict):
 config = Config({
         # dataset path                  # /win5_all/===/win5/===/MPI/===/NBU/===/win5_epi/
 
-        "db_name":                      "win5",
-        "db_path":                      "/home/lin/Dateset/win5/distorted_images/",
+        "db_name":                      "NBU",   #NBU WIN5 MPI
+        "db_path":                      "/home/lin/Dateset/NBU/distorted_images/",
 
         "epi_path":                     "/home/lin/Dateset/"+"win5"+"_epi/distorted_images/",
-        "text_path":                    "/home/lin/Dateset/win5/1.txt",
+        "text_path":                    "/home/lin/Dateset/NBU/1.txt",
 
         "svPath":                       "./result",
         "mos_sv_path":                  "./data",
