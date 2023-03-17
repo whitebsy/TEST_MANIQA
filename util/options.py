@@ -1,35 +1,68 @@
+import cv2
 import numpy as np
+import torch
+
+'''
+only used when use cv
+'''
+
+class cv_transform(object):
+    def __init__(self, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+        self.mean = mean
+        self.std = std
+
+    def __call__(self, sample):
+        sample = np.array(sample).astype('float32') / 255
+        sample = (sample - self.mean) / self.std
+        sample = np.transpose(sample, (2, 0, 1))
+        sample = torch.from_numpy(sample).type(torch.FloatTensor)
+
+        return sample
 
 
-def RandShuffle(config):
-    train_size = config.train_size
+class Normalize(object):
+    def __init__(self, mean, var):
+        self.mean = mean
+        self.var = var
 
-    if config.scenes == 'all':
-        if config.db_name == 'WIN5-LID':
-            scenes = list(range(220))
-        elif config.db_name == 'win5all':
-            scenes = list(range(17820))
-        elif config.db_name == 'win5_5×5':
-            scenes = list(range(5500))
-        elif config.db_name == 'win5_random':
-            scenes = list(range(220*config.sel_num))
-        elif config.db_name == 'win5_81':
-            scenes = list(range(220))
-        elif config.db_name == 'win5_9×9':
-            scenes = list(range(1980))
+    def __call__(self, sample):
+        # r_img: C x H x W (numpy)
+        sai = sample
+        sai = (sai - self.mean) / self.var
 
-    else:
-        scenes = config.scenes
+        return sai
 
-    n_scenes = len(scenes)
-    n_train_scenes = int(np.floor(n_scenes * train_size))  # np.floor: 返回不大于输入参数的最大整数。（向下取整）
-    n_test_scenes = n_scenes - n_train_scenes
 
-    seed = np.random.random()
-    random_seed = int(seed * 10)
-    np.random.seed(random_seed)  # 生成指定随机数，仅一次有效--把np.random的随机数给指定了
-    np.random.shuffle(scenes)
-    train_scene_list = scenes[:n_train_scenes]
-    test_scene_list = scenes[n_train_scenes:]
+class ToTensor(object):
+    def __init__(self):
+        pass
 
-    return train_scene_list, test_scene_list
+    def __call__(self, sample):
+        sai = sample
+
+        # d_img = torch.from_numpy(d_img).type(torch.FloatTensor)
+        # score = torch.from_numpy(score).type(torch.FloatTensor)
+        # idx   = torch.from_numpy(idx)  .type(torch.FloatTensor)
+
+        sai = torch.from_numpy(sai)
+
+        return sai
+
+
+def sobel(sample):
+    x = cv2.Sobel(sample, cv2.CV_16S, 1, 0)
+    y = cv2.Sobel(sample, cv2.CV_16S, 0, 1)
+    abs_x = cv2.convertScaleAbs(x)
+    abs_y = cv2.convertScaleAbs(y)
+    dst = cv2.addWeighted(abs_x, 0.5, abs_y, 0.5, 0)
+
+    return dst
+
+
+def sobel_gray(sample):
+
+    x = cv2.Sobel(sample, cv2.CV_64F, 1, 0, ksize=3)
+    y = cv2.Sobel(sample, cv2.CV_64F, 0, 1, ksize=3)
+    dst = cv2.addWeighted(x, 0.5, y, 0.5, 0)
+
+    return dst
