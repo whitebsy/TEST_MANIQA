@@ -23,11 +23,17 @@ class IQA_datset(torch.utils.data.Dataset):
 
         idx_data, dis_files_data, score_data = [], [], []
 
+        # sai_list_sel = [
+        #     '4_4', '4_5', '4_6',
+        #     '5_4', '5_5', '5_6',
+        #     '6_4', '6_5', '6_6',
+        # ]
+
         sai_list_sel = [
-            '4_4', '4_5', '4_6',
-            '5_4', '5_5', '5_6',
-            '6_4', '6_5', '6_6',
+            '5_1','5_2','5_3','5_4','5_5','5_6','5_7','5_8','5_9',
+            '1_5','2_5','3_5','4_5','6_5','7_5','8_5','9_5',
         ]
+
         epi_list_x = ['x_5']
         epi_list_y = ['y_5']
 
@@ -115,17 +121,19 @@ class IQA_datset(torch.utils.data.Dataset):
             # sai = sai[top:bottom, left:right]
 
             # Sobel
-            x = cv2.Sobel(sai, cv2.CV_16S, 1, 0)
-            y = cv2.Sobel(sai, cv2.CV_16S, 0, 1)
-            abs_x = cv2.convertScaleAbs(x)
-            abs_y = cv2.convertScaleAbs(y)
-            dst = cv2.addWeighted(abs_x, 0.5, abs_y, 0.5, 0)
-            sai = dst                                         # ////////
+            # x = cv2.Sobel(sai, cv2.CV_16S, 1, 0)
+            # y = cv2.Sobel(sai, cv2.CV_16S, 0, 1)
+            # abs_x = cv2.convertScaleAbs(x)
+            # abs_y = cv2.convertScaleAbs(y)
+            # dst = cv2.addWeighted(abs_x, 0.5, abs_y, 0.5, 0)
+            # sai = dst                                         # ////////
 
             if if_flip > 0.5 and self.mode == 'train':
                 sai = cv2.flip(sai, 1)
+            # sai = sai.crop((left, top, right, bottom))   #add
+            sai = sai[top:bottom,left:right]   # crop to 224x224
             sai = np.array(sai).astype('float32') / 255
-            sai = np.transpose(sai, (2, 0, 1))
+            sai = np.transpose(sai, (2, 0, 1))   #[512, 512, 3] --> [3, 512, 512]
 
             if self.transform:
                 sai = self.transform(sai)

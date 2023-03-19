@@ -1,4 +1,6 @@
 import os
+
+import matplotlib.pyplot as plt
 import torch
 import numpy as np
 import logging
@@ -13,7 +15,7 @@ from torch.utils.tensorboard import SummaryWriter
 from scipy.stats import spearmanr, pearsonr
 from tqdm import tqdm
 
-from data.getting_mos import dis_list3
+from MANIQA.data.getting_mos import dis_list3
 from model_net.CNN_EPI_SAI import LFIQA
 from config import config
 from util.options import cv_transform, ToTensor, Normalize
@@ -71,7 +73,7 @@ def train_epoch(epoch, net, criterion, optimizer, scheduler, train_loader):
         labels = torch.squeeze(labels.type(torch.FloatTensor)).cuda()
         idx = data['idx'].cuda()  # ++
 
-        pred_d = net(x_d)
+        pred_d = net(x_d)    # input:x=[sai, epi]
 
         optimizer.zero_grad()
         loss = criterion(torch.squeeze(pred_d), labels)
@@ -297,6 +299,7 @@ if __name__ == '__main__':
         writer.add_scalar("SRCC", rho_s, epoch)
         writer.add_scalar("PLCC", rho_p, epoch)
 
+
         if (epoch + 1) % config.val_freq == 0:
             logging.info('Starting eval...')
             logging.info('Running testing in epoch {}'.format(epoch + 1))
@@ -312,6 +315,14 @@ if __name__ == '__main__':
                 # torch.save(net, model_save_path)
                 logging.info(
                     'Saving weights and model of epoch{}, SRCC:{}, PLCC:{}'.format(epoch + 1, best_srocc, best_plcc))
+        # writer.close()
 
         logging.info('Epoch {} done. Time: {:.2}min'.format(epoch + 1, (time.time() - start_time) / 60))
+    # plt.plot(len(losses), losses)
+    # plt.legend()
+    # plt.xlabel("epochs")
+    # plt.show()
+
+    #tensorboard :tensorboard --logdir="/home/lin/Work/test_bsy_qmj/MANIQA/output/tensorboard/model_maniqa/"
+
 

@@ -26,8 +26,11 @@ class LFIQA(nn.Module):
         self.res34 = models.resnet34(pretrained=True)
         # self.res34.conv1 = nn.Conv2d(9, 64, 7, 2, 3)
         self.res34 = torch.nn.Sequential(*list(self.res34.children())[:-1])  # 去除最后的层数,fc,avg_pool
+        self.vit = timm.create_model('vit_base_patch16_224_in21k', pretrained=True)    #change pre-trained model
 
+        self.conv768 = nn.Conv2d(768,512,1,1,0)
         self.conv6144 = nn.Conv2d(6144, 2048, 1, 1, 0)
+        self.conv8704=nn.Conv2d(8704, 1024, 1, 1, 0)
         self.conv4608 = nn.Conv2d(4608, 1024, 1, 1, 0)
         self.conv2048 = nn.Conv2d(2048, 1024, 1, 1, 0)
         self.conv1024 = nn.Conv2d(1024, 512, 1, 1, 0)
@@ -119,22 +122,22 @@ class LFIQA(nn.Module):
 
         '''EPI'''
         input_epi = True
-        if input_epi:
+        if input_epi:   # x:[b, 3, 9, 512]    y:[b, 3, 512, 9]
             x, y = epi
             rand_num = random.randint(1, 512 - 16)
-            x = x[:, :, :9, rand_num:rand_num+16]
+            x = x[:, :, :9, rand_num:rand_num+16]    # x: [b, 3, 9, 512] -->  [4, 3, 9, 16]
             # y = y[:, :, rand_num:rand_num+16, :]
-            y = y[:, :, :9, rand_num:rand_num+16]
-
-            x = self.CNN_Block(x)  # [4, 128, 1, 16]
-            y = self.CNN_Block(y)  # [4, 128, 16, 1]
-            x = torch.flatten(x, 1)
-            y = torch.flatten(y, 1)
+            # y = y[:, :, :9, rand_num:rand_num+16]     # y :[b, 3, 512, 9]  ->  [b, 3, 9, 0]?
+            y = y[:,:9,rand_num:rand_num+16,:]   #modify  y :[b, 3, 512, 9]  ->   [b, 3, 16, 9]
+            x = self.CNN_Block(x)  # [4, 128, 1, 16]      b=2: x-->[2, 128, 1, 2]
+            y = self.CNN_Block(y)  # [4, 128, 16, 1]        y--> [2, 128, 2, 1]
+            x = torch.flatten(x, 1)     #x-->[2, 256]
+            y = torch.flatten(y, 1)     #y---->[2, 256]
             # x = x[:, :, 0, 0]
             # y = y[:, :, 0, 0]
             x = self.CNN_Block2(x)
             y = self.CNN_Block2(y)
-            e = torch.concat((x, y), dim=1)
+            e = torch.concat((x, y), dim=1)   #e--> [2, 512]
             # e = self.elu(e)
             # e = self.relu(e)
             # e = torch.flatten(e, 1)
@@ -170,12 +173,14 @@ class LFIQA(nn.Module):
 
         # 3
         for i in range(len(sai)):
-            f = self.res34(sai[i])
+            f = self.vit(sai[i])   #old: resnet 34
             # f = self.res50(sai[i])
             # f = self.conv2048(f)
             l.append(f)
-        s = torch.concat(l, dim=1)
-        s = self.conv4608(s)
+        s = torch.concat(l, dim=1)      #SAI fusion  s:[2, 8704, 1, 1]
+        # s = self.conv8704(s)   #modify to resnet34 and h,v input
+        s = self.conv768(s)
+        # s = self.conv4608(s)   #old used
         # s = self.conv1024(s)
         # s = self.avgpool_2d(s)
         s = torch.flatten(s, 1)

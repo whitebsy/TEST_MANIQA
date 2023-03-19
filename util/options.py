@@ -2,19 +2,16 @@ import cv2
 import numpy as np
 import torch
 
-'''
-only used when use cv
-'''
 
 class cv_transform(object):
-    def __init__(self, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+    def __init__(self, mean=0.5, std=0.5): #mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)
         self.mean = mean
         self.std = std
 
-    def __call__(self, sample):
+    def __call__(self, sample):   #[3, 512, 512]
         sample = np.array(sample).astype('float32') / 255
         sample = (sample - self.mean) / self.std
-        sample = np.transpose(sample, (2, 0, 1))
+        # sample = np.transpose(sample, (2, 0, 1))   modify
         sample = torch.from_numpy(sample).type(torch.FloatTensor)
 
         return sample
@@ -49,20 +46,20 @@ class ToTensor(object):
         return sai
 
 
-def sobel(sample):
-    x = cv2.Sobel(sample, cv2.CV_16S, 1, 0)
-    y = cv2.Sobel(sample, cv2.CV_16S, 0, 1)
-    abs_x = cv2.convertScaleAbs(x)
-    abs_y = cv2.convertScaleAbs(y)
-    dst = cv2.addWeighted(abs_x, 0.5, abs_y, 0.5, 0)
-
-    return dst
-
-
-def sobel_gray(sample):
-
-    x = cv2.Sobel(sample, cv2.CV_64F, 1, 0, ksize=3)
-    y = cv2.Sobel(sample, cv2.CV_64F, 0, 1, ksize=3)
-    dst = cv2.addWeighted(x, 0.5, y, 0.5, 0)
-
-    return dst
+# def sobel(sample):
+#     x = cv2.Sobel(sample, cv2.CV_16S, 1, 0)
+#     y = cv2.Sobel(sample, cv2.CV_16S, 0, 1)
+#     abs_x = cv2.convertScaleAbs(x)
+#     abs_y = cv2.convertScaleAbs(y)
+#     dst = cv2.addWeighted(abs_x, 0.5, abs_y, 0.5, 0)
+#
+#     return dst
+#
+#
+# def sobel_gray(sample):
+#
+#     x = cv2.Sobel(sample, cv2.CV_64F, 1, 0, ksize=3)
+#     y = cv2.Sobel(sample, cv2.CV_64F, 0, 1, ksize=3)
+#     dst = cv2.addWeighted(x, 0.5, y, 0.5, 0)
+#
+#     return dst

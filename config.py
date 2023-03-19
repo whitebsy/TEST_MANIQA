@@ -17,9 +17,8 @@ class Config(dict):
 config = Config({
         # dataset path                  # /win5_all/===/win5/===/MPI/===/NBU/===/win5_epi/
 
-        "db_name":                      "win5",   #NBU WIN5 MPI
+        "db_name":                      "win5",
         "db_path":                      "/home/lin/Dateset/win5/distorted_images/",
-
         "epi_path":                     "/home/lin/Dateset/"+"win5"+"_epi/distorted_images/",
         "text_path":                    "/home/lin/Dateset/win5/1.txt",
 
@@ -30,7 +29,7 @@ config = Config({
 
 
         # optimization
-        "batch_size":                   4,                               # batch size
+        "batch_size":                   2,                               # batch size
         "n_epoch":                      600,                             # epoch
         "val_freq":                     1,                               # 几次训练测试一次
         "crop_size":                    224,                             # dataloader裁切patch大小,224，256, 和img_size一起改动
@@ -43,7 +42,7 @@ config = Config({
 
         # 偶尔改动
         "train_rate":                   0.8,
-        "normal_test":                  True,                           # 正常测试 or five_point_crop, True\False
+        "normal_test":                  False,                           # 正常测试 or five_point_crop, True\False
         "if_resize":                    True,                            # True\False
 
         # 很少改动
